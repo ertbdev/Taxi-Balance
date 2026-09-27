@@ -88,7 +88,7 @@ export function DatePickerInput({
   }
 
   return (
-    <Field className="mx-auto w-48">
+    <Field className="mx-auto w-full">
       <FieldLabel htmlFor="date-required">{label}</FieldLabel>
       <InputGroup>
         <InputGroupInput

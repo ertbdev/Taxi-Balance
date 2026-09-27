@@ -4,6 +4,8 @@ import { Controller, useForm } from "react-hook-form";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { DatePickerInput } from "@/components/interface/DatePicker";
+import { addRecord, RecordData } from "@/firebase/addRecord";
 
 import {
   Card,
@@ -32,10 +34,19 @@ const AddForm = () => {
     type: "text" | "number" | "date";
     errorMessage: string;
     required: boolean;
-    initialValue: string;
+    initialValue: string | number;
   };
 
   const loginFormData: fromField[] = [
+    {
+      id: "date-form",
+      label: "Fecha",
+      name: "fecha",
+      type: "date",
+      errorMessage: "La fecha es requerida",
+      required: true,
+      initialValue: Date.now(),
+    },
     {
       id: "servicios-form",
       label: "Servicios totales",
@@ -82,6 +93,10 @@ const AddForm = () => {
             acc[field.name] = z
               .string()
               .min(1, { message: field.errorMessage });
+          } else if (field.type === "date") {
+            acc[field.name] = z
+              .number({ message: field.errorMessage })
+              .min(1, { message: field.errorMessage });
           } else {
             acc[field.name] = z
               .union([z.string(), z.number()])
@@ -92,6 +107,8 @@ const AddForm = () => {
         } else {
           if (field.type === "text") {
             acc[field.name] = z.string().optional();
+          } else if (field.type === "date") {
+            acc[field.name] = z.number().optional();
           } else {
             acc[field.name] = z
               .union([z.string(), z.number()])
@@ -118,21 +135,17 @@ const AddForm = () => {
     ),
   });
 
-  const onLogin = async (data: z.infer<typeof dinamicSchema>) => {
-    // setLoading(true);
-    // const { email, password } = data;
-    // try {
-    //   if (typeof email === "string" && typeof password === "string") {
-    //     await signInWithEmailAndPassword(cAuth, email, password);
-    //     router.push("/");
-    //   } else {
-    //     throw new Error("Email and password are required");
-    //   }
-    // } catch (e) {
-    //   console.error(e);
-    // } finally {
-    //   setLoading(false);
-    // }
+  const onSubmit = async (data: z.infer<typeof dinamicSchema>) => {
+    setLoading(true);
+    try {
+      await addRecord(data as unknown as RecordData);
+      form.reset();
+      router.push("/");
+    } catch (e) {
+      console.error("Error adding record:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -145,7 +158,7 @@ const AddForm = () => {
         <form
           id="login-form"
           className="space-y-8"
-          onSubmit={form.handleSubmit(onLogin)}
+          onSubmit={form.handleSubmit(onSubmit)}
         >
           <FieldGroup>
             {loginFormData.map((field) => (
@@ -153,22 +166,30 @@ const AddForm = () => {
                 key={field.id}
                 name={field.name as keyof z.infer<typeof dinamicSchema>}
                 control={form.control}
-                render={({ field: controllerField, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.id}>{field.label}</FieldLabel>
-                    <Input
-                      {...controllerField}
-                      id={field.id}
-                      aria-invalid={fieldState.invalid}
-                      autoComplete="off"
-                      type={field.type === "text" ? "text" : "number"}
-                      value={controllerField.value as string | number}
+                render={({ field: controllerField, fieldState }) =>
+                  field.type === "date" ? (
+                    <DatePickerInput
+                      label={field.label}
+                      value={controllerField.value as number | undefined}
+                      onChange={(timestamp) => controllerField.onChange(timestamp)}
                     />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                  ) : (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.id}>{field.label}</FieldLabel>
+                      <Input
+                        {...controllerField}
+                        id={field.id}
+                        aria-invalid={fieldState.invalid}
+                        autoComplete="off"
+                        type={field.type === "text" ? "text" : "number"}
+                        value={controllerField.value as string | number}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )
+                }
               />
             ))}
           </FieldGroup>
