@@ -17,49 +17,85 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-function formatDate(date: Date | undefined) {
-  if (!date) {
-    return ""
-  }
+const FALLBACK_DISPLAY = "05/05/05"
+
+function timestampToDate(timestamp: number | undefined): Date | undefined {
+  if (timestamp == null) return undefined
+  const date = new Date(timestamp)
+  return isNaN(date.getTime()) ? undefined : date
+}
+
+function formatDate(date: Date | undefined): string {
+  if (!date) return FALLBACK_DISPLAY
 
   return date.toLocaleDateString("en-US", {
     day: "2-digit",
-    month: "long",
-    year: "numeric",
+    month: "2-digit",
+    year: "2-digit",
   })
 }
 
-function isValidDate(date: Date | undefined) {
-  if (!date) {
-    return false
-  }
+function isValidDate(date: Date | undefined): boolean {
+  if (!date) return false
   return !isNaN(date.getTime())
 }
 
-export function DatePickerInput() {
+interface DatePickerInputProps {
+  /** Unix timestamp in milliseconds */
+  value?: number
+  onChange?: (timestamp: number) => void
+  label?: string
+}
+
+export function DatePickerInput({
+  value,
+  onChange,
+  label = "Subscription Date",
+}: DatePickerInputProps) {
   const [open, setOpen] = React.useState(false)
-  const [date, setDate] = React.useState<Date | undefined>(
-    new Date("2025-06-01")
-  )
-  const [month, setMonth] = React.useState<Date | undefined>(date)
-  const [value, setValue] = React.useState(formatDate(date))
+
+  const dateFromProp = timestampToDate(value)
+  const [date, setDate] = React.useState<Date | undefined>(dateFromProp)
+  const [month, setMonth] = React.useState<Date | undefined>(dateFromProp)
+  const [inputValue, setInputValue] = React.useState(formatDate(dateFromProp))
+
+  // Sync internal state when the `value` prop changes externally
+  React.useEffect(() => {
+    const incoming = timestampToDate(value)
+    setDate(incoming)
+    setMonth(incoming)
+    setInputValue(formatDate(incoming))
+  }, [value])
+
+  function handleCalendarSelect(selected: Date | undefined) {
+    setDate(selected)
+    setInputValue(formatDate(selected))
+    setOpen(false)
+    if (selected && isValidDate(selected)) {
+      onChange?.(selected.getTime())
+    }
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value
+    setInputValue(raw)
+    const parsed = new Date(raw)
+    if (isValidDate(parsed)) {
+      setDate(parsed)
+      setMonth(parsed)
+      onChange?.(parsed.getTime())
+    }
+  }
 
   return (
     <Field className="mx-auto w-48">
-      <FieldLabel htmlFor="date-required">Subscription Date</FieldLabel>
+      <FieldLabel htmlFor="date-required">{label}</FieldLabel>
       <InputGroup>
         <InputGroupInput
           id="date-required"
-          value={value}
-          placeholder="June 01, 2025"
-          onChange={(e) => {
-            const date = new Date(e.target.value)
-            setValue(e.target.value)
-            if (isValidDate(date)) {
-              setDate(date)
-              setMonth(date)
-            }
-          }}
+          value={inputValue}
+          placeholder={FALLBACK_DISPLAY}
+          onChange={handleInputChange}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
               e.preventDefault()
@@ -81,11 +117,7 @@ export function DatePickerInput() {
                 selected={date}
                 month={month}
                 onMonthChange={setMonth}
-                onSelect={(date) => {
-                  setDate(date)
-                  setValue(formatDate(date))
-                  setOpen(false)
-                }}
+                onSelect={handleCalendarSelect}
               />
             </PopoverContent>
           </Popover>

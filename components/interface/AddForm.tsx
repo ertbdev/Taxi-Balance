@@ -19,8 +19,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { cAuth } from "@/firebase/config/client";
 
 const AddForm = () => {
   const [loading, setLoading] = useState(false);
@@ -89,7 +87,7 @@ const AddForm = () => {
               .union([z.string(), z.number()])
               .refine((val) => val !== "", { message: field.errorMessage })
               .transform((val) => Number(val))
-              .pipe(z.number({ message: 'El valor debe ser un número' }));
+              .pipe(z.number({ message: "El valor debe ser un número" }));
           }
         } else {
           if (field.type === "text") {
@@ -98,7 +96,9 @@ const AddForm = () => {
             acc[field.name] = z
               .union([z.string(), z.number()])
               .transform((val) => (val === "" ? undefined : Number(val)))
-              .pipe(z.number({ message: 'El valor debe ser un número' }).optional());
+              .pipe(
+                z.number({ message: "El valor debe ser un número" }).optional(),
+              );
           }
         }
         return acc;
