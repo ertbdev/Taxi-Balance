@@ -157,7 +157,7 @@ const AddForm = ({ onAddSuccess }: AddFormProps = {}) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button variant="ghost" className="w-full justify-start" />}>
         Añadir registro
       </DialogTrigger>
       <DialogContent className="w-87.5 sm:max-w-md">

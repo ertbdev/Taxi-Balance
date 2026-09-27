@@ -62,8 +62,8 @@ export default function MonthNotesModal({ onSaveSuccess }: MonthNotesModalProps)
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="secondary" />}>
-        Notas
+      <DialogTrigger render={<Button variant="ghost" className="w-full justify-start" />}>
+        Notas del mes
       </DialogTrigger>
       <DialogContent className="sm:max-w-md flex flex-col gap-4">
         <DialogHeader>

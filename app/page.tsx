@@ -2,6 +2,7 @@
 
 import AddForm from "@/components/interface/AddForm";
 import MonthNotesModal from "@/components/interface/MonthNotesModal";
+import Navbar from "@/components/interface/Navbar";
 import { Button } from "@/components/ui/button";
 import { cAuth } from "@/firebase/config/client";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
@@ -204,15 +205,19 @@ export default function Home() {
     );
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-4xl mx-auto gap-10">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <Button variant="destructive" disabled={loading} onClick={handleLogout}>
-          Logout
-        </Button>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      <Navbar
+        user={user}
+        onLogout={handleLogout}
+        actions={
+          <>
+            <AddForm onAddSuccess={() => window.location.reload()} />
+            <MonthNotesModal onSaveSuccess={(note) => setMonthNote(note)} />
+          </>
+        }
+      />
 
-      <main className="flex flex-col gap-10 flex-1">
+      <main className="flex flex-col gap-10 flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full">
         {/* Single Day Selector at the Top */}
         <div className="flex items-center justify-between bg-white dark:bg-zinc-950 p-4 rounded-xl shadow-sm border">
           <Button variant="ghost" size="icon" onClick={handlePrevDay}>
@@ -277,10 +282,6 @@ export default function Home() {
           <SummaryCards summary={monthSummary} loading={loadingRecords} />
         </section>
 
-        <div className="flex justify-center gap-4 mt-4">
-          <AddForm onAddSuccess={() => window.location.reload()} />
-          <MonthNotesModal onSaveSuccess={(note) => setMonthNote(note)} />
-        </div>
 
         {monthNote && (
           <section className="flex flex-col gap-4 mt-4">
