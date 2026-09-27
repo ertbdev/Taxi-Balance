@@ -1,4 +1,4 @@
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, writeBatch, collection } from "firebase/firestore";
 import { cAuth, cDb } from "@/firebase/config/client";
 
 export interface RecordData {
@@ -23,7 +23,7 @@ function formatDateId(timestamp: number): string {
 /**
  * Adds (or overwrites) a record in a Firestore collection named after the
  * current user. The document ID is the fecha formatted as dd-mm-yyyy,
- * ensuring only one entry per day.
+ * ensuring only one entry per day. Also logs the change.
  *
  * @returns The document ID (dd-mm-yyyy).
  * @throws  If no user is signed in.
@@ -35,13 +35,34 @@ export async function addRecord(data: RecordData): Promise<string> {
   }
 
   const docId = formatDateId(data.fecha);
+  const recordRef = doc(cDb, "users", user.uid, "records", docId);
+  const logRef = doc(collection(cDb, "users", user.uid, "logs"));
 
-  await setDoc(doc(cDb, "users", user.uid, "records", docId), {
+  const existingSnap = await getDoc(recordRef);
+  const isUpdate = existingSnap.exists();
+  const now = Date.now();
+
+  const recordToSave = {
     ...data,
     userId: user.uid,
-    createdAt: Date.now(),
-    modifiedAt: Date.now(),
-  });
+    createdAt: isUpdate ? existingSnap.data()?.createdAt || now : now,
+    modifiedAt: now,
+  };
+
+  const logEntry = {
+    action: isUpdate ? "UPDATE" : "CREATE",
+    recordId: docId,
+    timestamp: now,
+    newData: data,
+    previousData: isUpdate ? existingSnap.data() : null,
+  };
+
+  const batch = writeBatch(cDb);
+  
+  batch.set(recordRef, recordToSave);
+  batch.set(logRef, logEntry);
+
+  await batch.commit();
 
   return docId;
 }

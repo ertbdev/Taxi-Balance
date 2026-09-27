@@ -4,7 +4,7 @@ import { User } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { UserCircle } from "lucide-react";
+import { UserCircle, CarTaxiFront } from "lucide-react";
 import { useState } from "react";
 
 interface NavbarProps {
@@ -33,9 +33,10 @@ export default function Navbar({ user, onLogout, actions }: NavbarProps) {
         {/* Logo */}
         <button
           onClick={() => window.location.reload()}
-          className="text-xl font-bold tracking-tight hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 text-xl font-bold tracking-tight hover:opacity-80 transition-opacity"
         >
-          Ingresos
+          <CarTaxiFront className="w-6 h-6 text-yellow-500" />
+          TaxiFinanzas
         </button>
 
         {/* Avatar */}

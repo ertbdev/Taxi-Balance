@@ -1,13 +1,8 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, writeBatch, collection } from "firebase/firestore";
 import { cAuth, cDb } from "@/firebase/config/client";
 
 /**
- * Firestore path: /{username}/_metadata/notes/{MM-YYYY}
- *
- * - {username}   — top-level collection (named after the user)
- * - _metadata    — fixed placeholder document (holds subcollections)
- * - notes        — subcollection
- * - {MM-YYYY}    — one document per month
+ * Firestore path: /users/{userId}/notes/{MM-YYYY}
  */
 
 function monthKey(month: number, year: number): string {
@@ -15,7 +10,6 @@ function monthKey(month: number, year: number): string {
 }
 
 function noteRef(userId: string, monthYear: string) {
-  // 4 path segments = valid Firestore document reference
   return doc(cDb, "users", userId, "notes", monthYear);
 }
 
@@ -32,9 +26,28 @@ export async function saveMonthNote(month: number, year: number, text: string): 
   const user = cAuth.currentUser;
   if (!user) throw new Error("No authenticated user found");
 
-  await setDoc(
-    noteRef(user.uid, monthKey(month, year)),
-    { text, userId: user.uid, updatedAt: Date.now() },
-    { merge: true }
-  );
+  const mKey = monthKey(month, year);
+  const ref = noteRef(user.uid, mKey);
+  const logRef = doc(collection(cDb, "users", user.uid, "logs"));
+
+  const existingSnap = await getDoc(ref);
+  const isUpdate = existingSnap.exists();
+  const now = Date.now();
+
+  const noteData = { text, userId: user.uid, updatedAt: now };
+
+  const logEntry = {
+    action: isUpdate ? "UPDATE_NOTE" : "CREATE_NOTE",
+    recordId: mKey,
+    timestamp: now,
+    newData: noteData,
+    previousData: isUpdate ? existingSnap.data() : null,
+  };
+
+  const batch = writeBatch(cDb);
+  
+  batch.set(ref, noteData, { merge: true });
+  batch.set(logRef, logEntry);
+
+  await batch.commit();
 }
