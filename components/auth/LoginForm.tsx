@@ -49,14 +49,20 @@ const LoginForm = () => {
   };
 
   const onGoogleLogin = async () => {
-    setLoading(true);
+    const provider = new GoogleAuthProvider();
     try {
-      const provider = new GoogleAuthProvider();
+      // Must be called immediately without any state updates (like setLoading) before it,
+      // otherwise mobile browsers and strict mode treat it as an async popup and block it.
       await signInWithPopup(cAuth, provider);
+      setLoading(true);
       router.push("/");
     } catch (e: any) {
       console.error(e);
-      alert("Error Google Login: " + e.message);
+      if (e.code === 'auth/popup-blocked') {
+        alert("El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para iniciar sesión.");
+      } else {
+        alert("Error Google Login: " + e.message);
+      }
       setLoading(false);
     }
   };
