@@ -14,16 +14,12 @@ export async function getRecordsByMonth(month: number, year: number): Promise<Re
     throw new Error("No authenticated user found");
   }
 
-  const collectionName =
-    user.displayName || user.email?.split("@")[0] || user.uid;
-
   // month is 1-12, so subtract 1 for Date object (0-11)
   const start = new Date(year, month - 1, 1).getTime();
   const end = new Date(year, month, 0, 23, 59, 59, 999).getTime();
 
   const q = query(
-    collection(cDb, collectionName),
-    where("userId", "==", user.uid),
+    collection(cDb, "users", user.uid, "records"),
     where("fecha", ">=", start),
     where("fecha", "<=", end)
   );
@@ -43,7 +39,6 @@ export async function getRecordByDate(timestamp: number): Promise<RecordData | n
     throw new Error("No authenticated user found");
   }
 
-  const collectionName = user.displayName || user.email?.split("@")[0] || user.uid;
   const date = new Date(timestamp);
   const dd = String(date.getDate()).padStart(2, "0");
   const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -52,7 +47,7 @@ export async function getRecordByDate(timestamp: number): Promise<RecordData | n
 
   // Since we know the document ID directly, we can just getDoc instead of querying
   const { doc, getDoc } = await import("firebase/firestore");
-  const docRef = doc(cDb, collectionName, docId);
+  const docRef = doc(cDb, "users", user.uid, "records", docId);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists() && docSnap.data()?.userId === user.uid) {

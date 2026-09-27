@@ -34,12 +34,9 @@ export async function addRecord(data: RecordData): Promise<string> {
     throw new Error("No authenticated user found");
   }
 
-  const collectionName =
-    user.displayName || user.email?.split("@")[0] || user.uid;
-
   const docId = formatDateId(data.fecha);
 
-  await setDoc(doc(cDb, collectionName, docId), {
+  await setDoc(doc(cDb, "users", user.uid, "records", docId), {
     ...data,
     userId: user.uid,
     createdAt: Date.now(),
