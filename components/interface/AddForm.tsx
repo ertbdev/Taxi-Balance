@@ -8,13 +8,14 @@ import { DatePickerInput } from "@/components/interface/DatePicker";
 import { addRecord, RecordData } from "@/firebase/addRecord";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +25,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
 const AddForm = () => {
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const router = useRouter();
 
@@ -140,7 +142,7 @@ const AddForm = () => {
     try {
       await addRecord(data as unknown as RecordData);
       form.reset();
-      router.push("/");
+      setOpen(false);
     } catch (e) {
       console.error("Error adding record:", e);
     } finally {
@@ -149,12 +151,15 @@ const AddForm = () => {
   };
 
   return (
-    <Card className="w-87.5">
-      <CardHeader>
-        <CardTitle className="text-center">Ingresar</CardTitle>
-        <CardDescription>Ingresar las credenciales</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button />}>
+        Añadir registro
+      </DialogTrigger>
+      <DialogContent className="w-87.5 sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center">Ingresar</DialogTitle>
+          <DialogDescription>Ingresar las credenciales</DialogDescription>
+        </DialogHeader>
         <form
           id="login-form"
           className="space-y-8"
@@ -194,18 +199,18 @@ const AddForm = () => {
             ))}
           </FieldGroup>
         </form>
-      </CardContent>
-      <CardFooter>
-        <Field orientation="horizontal">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
-            Cancelar
-          </Button>
-          <Button disabled={loading} type="submit" form="login-form">
-            Ingresar
-          </Button>
-        </Field>
-      </CardFooter>
-    </Card>
+        <DialogFooter>
+          <Field orientation="horizontal">
+            <Button type="button" variant="outline" onClick={() => { form.reset(); setOpen(false); }}>
+              Cancelar
+            </Button>
+            <Button disabled={loading} type="submit" form="login-form">
+              Guardar
+            </Button>
+          </Field>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
