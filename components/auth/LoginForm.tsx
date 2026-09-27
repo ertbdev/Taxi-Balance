@@ -20,7 +20,7 @@ import loginSchema from "@/schemas/loginSchema";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { cAuth } from "@/firebase/config/client";
 
 const LoginForm = () => {
@@ -52,11 +52,11 @@ const LoginForm = () => {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(cAuth, provider);
-      // We don't push to "/" here because it redirects the whole page.
-      // When it comes back, onAuthStateChanged in page.tsx or layout.tsx will handle the logged in state.
-    } catch (e) {
+      await signInWithPopup(cAuth, provider);
+      router.push("/");
+    } catch (e: any) {
       console.error(e);
+      alert("Error Google Login: " + e.message);
       setLoading(false);
     }
   };
