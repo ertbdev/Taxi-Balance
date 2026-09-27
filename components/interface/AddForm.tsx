@@ -19,16 +19,18 @@ import {
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
+import { getRecordByDate } from "@/firebase/getRecords";
 
 interface AddFormProps {
   onAddSuccess?: () => void;
   trigger?: React.ReactElement;
+  initialDate?: Date;
 }
 
-const AddForm = ({ onAddSuccess, trigger }: AddFormProps = {}) => {
+const AddForm = ({ onAddSuccess, trigger, initialDate }: AddFormProps = {}) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -141,6 +143,46 @@ const AddForm = ({ onAddSuccess, trigger }: AddFormProps = {}) => {
       {} as Record<string, any>,
     ),
   });
+
+  const { watch, setValue } = form;
+  const fecha = watch("fecha");
+  const [isFetchingRecord, setIsFetchingRecord] = useState(false);
+
+  useEffect(() => {
+    if (open && initialDate) {
+      // Just set the date initially when opened
+      setValue("fecha", initialDate.getTime());
+    }
+  }, [open, initialDate, setValue]);
+
+  useEffect(() => {
+    if (open && fecha) {
+      let isMounted = true;
+      setIsFetchingRecord(true);
+      getRecordByDate(fecha as number)
+        .then((record) => {
+          if (isMounted) {
+            if (record) {
+              setValue("services", record.services);
+              setValue("efectivo", record.efectivo);
+              setValue("tarjeta", record.tarjeta);
+              setValue("notas", record.notas || "");
+            } else {
+              setValue("services", "" as any);
+              setValue("efectivo", "" as any);
+              setValue("tarjeta", "" as any);
+              setValue("notas", "");
+            }
+          }
+        })
+        .catch(console.error)
+        .finally(() => {
+          if (isMounted) setIsFetchingRecord(false);
+        });
+      
+      return () => { isMounted = false; };
+    }
+  }, [fecha, open, setValue]);
 
   const onSubmit = async (data: z.infer<typeof dinamicSchema>) => {
     setLoading(true);

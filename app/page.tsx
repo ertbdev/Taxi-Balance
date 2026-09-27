@@ -191,7 +191,7 @@ export default function Home() {
         onLogout={handleLogout}
         actions={
           <>
-            <AddForm onAddSuccess={() => window.location.reload()} />
+            <AddForm onAddSuccess={() => window.location.reload()} initialDate={currentDate} />
             <MonthNotesModal onSaveSuccess={(note) => setMonthNote(note)} initialDate={currentDate} />
           </>
         }
@@ -257,6 +257,7 @@ export default function Home() {
           <AddForm 
             onAddSuccess={() => window.location.reload()} 
             trigger={<Button className="w-auto"><Plus className="w-4 h-4 mr-2" /> Añadir registro</Button>}
+            initialDate={currentDate}
           />
           <MonthNotesModal 
             onSaveSuccess={(note) => setMonthNote(note)} 
@@ -302,6 +303,7 @@ export default function Home() {
               <AddForm 
                 onAddSuccess={() => window.location.reload()} 
                 trigger={<Button size="icon" className="rounded-full shadow-lg h-10 w-10"><FilePlus className="w-4 h-4" /></Button>}
+                initialDate={currentDate}
               />
             </div>
             <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">

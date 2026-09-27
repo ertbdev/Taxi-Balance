@@ -36,3 +36,28 @@ export async function getRecordsByMonth(month: number, year: number): Promise<Re
 
   return records;
 }
+
+export async function getRecordByDate(timestamp: number): Promise<RecordData | null> {
+  const user = cAuth.currentUser;
+  if (!user) {
+    throw new Error("No authenticated user found");
+  }
+
+  const collectionName = user.displayName || user.email?.split("@")[0] || user.uid;
+  const date = new Date(timestamp);
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  const docId = `${dd}-${mm}-${yyyy}`;
+
+  // Since we know the document ID directly, we can just getDoc instead of querying
+  const { doc, getDoc } = await import("firebase/firestore");
+  const docRef = doc(cDb, collectionName, docId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists() && docSnap.data()?.userId === user.uid) {
+    return docSnap.data() as RecordData;
+  }
+  
+  return null;
+}

@@ -12,7 +12,7 @@ service cloud.firestore {
 
       // Read: must own the document
       allow read: if request.auth != null
-                  && resource.data.userId == request.auth.uid;
+                  && (resource == null || resource.data.userId == request.auth.uid);
 
       // Create: must be logged in and set userId to their own UID
       allow create: if request.auth != null
