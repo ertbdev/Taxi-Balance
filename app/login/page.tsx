@@ -1,0 +1,39 @@
+"use client";
+
+import LoginForm from "@/components/auth/LoginForm";
+import { cAuth } from "@/firebase/config/client";
+import { onAuthStateChanged } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+export default function Home() {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(cAuth, (currentUser) => {
+      if (currentUser) {
+        router.push("/");
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-50">
+      <main className="flex flex-1 flex-col justify-center items-center">
+        <LoginForm />
+      </main>
+    </div>
+  );
+}
