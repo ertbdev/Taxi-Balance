@@ -23,7 +23,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
-const AddForm = () => {
+interface AddFormProps {
+  onAddSuccess?: () => void;
+}
+
+const AddForm = ({ onAddSuccess }: AddFormProps = {}) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -143,6 +147,7 @@ const AddForm = () => {
       await addRecord(data as unknown as RecordData);
       form.reset();
       setOpen(false);
+      onAddSuccess?.();
     } catch (e) {
       console.error("Error adding record:", e);
     } finally {

@@ -25,10 +25,12 @@ function timestampToDate(timestamp: number | undefined): Date | undefined {
   return isNaN(date.getTime()) ? undefined : date
 }
 
+import { es } from "date-fns/locale"
+
 function formatDate(date: Date | undefined): string {
   if (!date) return FALLBACK_DISPLAY
 
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("es-ES", {
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
@@ -114,6 +116,7 @@ export function DatePickerInput({
             >
               <Calendar
                 mode="single"
+                locale={es}
                 selected={date}
                 month={month}
                 onMonthChange={setMonth}
