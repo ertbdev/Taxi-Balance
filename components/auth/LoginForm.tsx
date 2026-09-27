@@ -20,7 +20,7 @@ import loginSchema from "@/schemas/loginSchema";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { cAuth } from "@/firebase/config/client";
 
 const LoginForm = () => {
@@ -52,10 +52,19 @@ const LoginForm = () => {
     setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithRedirect(cAuth, provider);
+      const result = await signInWithPopup(cAuth, provider);
+      if (result.user) {
+        router.push("/");
+      } else {
+        setLoading(false);
+      }
     } catch (e: any) {
       console.error(e);
-      alert("Error Google Login: " + e.message);
+      if (e.code === 'auth/popup-blocked') {
+        alert("El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes.");
+      } else if (e.code !== 'auth/popup-closed-by-user') {
+        alert("Error: " + e.message);
+      }
       setLoading(false);
     }
   };
@@ -87,6 +96,7 @@ const LoginForm = () => {
                     aria-invalid={fieldState.invalid}
                     // placeholder="user@mail.com"
                     autoComplete="off"
+                    disabled={loading}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -106,6 +116,7 @@ const LoginForm = () => {
                     id="form-password"
                     aria-invalid={fieldState.invalid}
                     autoComplete="off"
+                    disabled={loading}
                     type="password"
                   />
                   {fieldState.invalid && (
@@ -119,7 +130,7 @@ const LoginForm = () => {
       </CardContent>
       <CardFooter className="flex-col gap-4">
         <Field orientation="horizontal" className="w-full flex justify-between">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
+          <Button disabled={loading} type="button" variant="outline" onClick={() => form.reset()}>
             Cancelar
           </Button>
           <Button disabled={loading} type="submit" form="login-form">

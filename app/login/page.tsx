@@ -2,7 +2,7 @@
 
 import LoginForm from "@/components/auth/LoginForm";
 import { cAuth } from "@/firebase/config/client";
-import { onAuthStateChanged, getRedirectResult } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -13,25 +13,14 @@ export default function Home() {
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Listen for auth state changes (fires immediately, sometimes with null before redirect finishes)
+    // 1. Listen for auth state changes
     const unsubscribe = onAuthStateChanged(cAuth, (currentUser) => {
       if (currentUser && isMounted) {
         router.push("/");
+      } else {
+        if (isMounted) setCheckingAuth(false);
       }
     });
-
-    // 2. Wait for getRedirectResult to finish before we assume the user is not logged in.
-    // This resolves after Firebase fully reads IndexedDB and processes the Google Redirect.
-    getRedirectResult(cAuth)
-      .then(() => {
-        if (isMounted && !cAuth.currentUser) {
-          setCheckingAuth(false);
-        }
-      })
-      .catch((error) => {
-        console.error("Error processing redirect result:", error);
-        if (isMounted) setCheckingAuth(false);
-      });
 
     return () => {
       isMounted = false;
