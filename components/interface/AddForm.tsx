@@ -236,6 +236,7 @@ const AddForm = ({ onAddSuccess, trigger, initialDate }: AddFormProps = {}) => {
                         autoComplete="off"
                         type={field.type === "text" ? "text" : "number"}
                         value={controllerField.value as string | number}
+                        disabled={loading || isFetchingRecord}
                       />
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
@@ -249,11 +250,11 @@ const AddForm = ({ onAddSuccess, trigger, initialDate }: AddFormProps = {}) => {
         </form>
         <DialogFooter>
           <Field orientation="horizontal">
-            <Button type="button" variant="outline" onClick={() => { form.reset(); setOpen(false); }}>
+            <Button disabled={loading || isFetchingRecord} type="button" variant="outline" onClick={() => { form.reset(); setOpen(false); }}>
               Cancelar
             </Button>
-            <Button disabled={loading} type="submit" form="login-form">
-              Guardar
+            <Button disabled={loading || isFetchingRecord} type="submit" form="login-form">
+              {isFetchingRecord ? "Cargando..." : "Guardar"}
             </Button>
           </Field>
         </DialogFooter>
