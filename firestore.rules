@@ -1,0 +1,49 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -----------------------------------------------------------------------
+    // Daily records
+    // Path: /{username}/{docId}   (e.g. "ricardo/27-09-2026")
+    // The collection is named after the authenticated user.
+    // -----------------------------------------------------------------------
+    match /{collectionName}/{docId} {
+
+      // Read: must own the document
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+
+      // Create: must be logged in and set userId to their own UID
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      // Update / Delete: must own the document
+      allow update, delete: if request.auth != null
+                            && resource.data.userId == request.auth.uid;
+
+      // -------------------------------------------------------------------
+      // Monthly notes subcollection
+      // Path: /{username}/_metadata/notes/{MM-YYYY}  (e.g. ".../09-2026")
+      // -------------------------------------------------------------------
+      match /notes/{monthYear} {
+
+        // Read: allow if document doesn't exist yet OR if the user owns it
+        allow read: if request.auth != null
+                    && (resource == null || resource.data.userId == request.auth.uid);
+
+        // Create: must set userId to their own UID
+        allow create: if request.auth != null
+                      && request.resource.data.userId == request.auth.uid;
+
+        // Update: must own the existing document
+        allow update: if request.auth != null
+                      && resource.data.userId == request.auth.uid;
+
+        // Delete: must own the document
+        allow delete: if request.auth != null
+                      && resource.data.userId == request.auth.uid;
+      }
+    }
+  }
+}

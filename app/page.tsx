@@ -1,12 +1,14 @@
 "use client";
 
 import AddForm from "@/components/interface/AddForm";
+import MonthNotesModal from "@/components/interface/MonthNotesModal";
 import { Button } from "@/components/ui/button";
 import { cAuth } from "@/firebase/config/client";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { getRecordsByMonth } from "@/firebase/getRecords";
+import { getMonthNote } from "@/firebase/monthNotes";
 import { RecordData } from "@/firebase/addRecord";
 import {
   ChevronLeft,
@@ -106,6 +108,7 @@ export default function Home() {
   const [records, setRecords] = useState<RecordData[]>([]);
   const [loadingRecords, setLoadingRecords] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [monthNote, setMonthNote] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(cAuth, (currentUser) => {
@@ -129,8 +132,12 @@ export default function Home() {
       setLoadingRecords(true);
       try {
         const month = currentMonth + 1;
-        const data = await getRecordsByMonth(month, currentYear);
+        const [data, note] = await Promise.all([
+          getRecordsByMonth(month, currentYear),
+          getMonthNote(month, currentYear),
+        ]);
         setRecords(data);
+        setMonthNote(note);
       } catch (e) {
         console.error("Error fetching records:", e);
       } finally {
@@ -270,14 +277,26 @@ export default function Home() {
           <SummaryCards summary={monthSummary} loading={loadingRecords} />
         </section>
 
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center gap-4 mt-4">
           <AddForm onAddSuccess={() => window.location.reload()} />
+          <MonthNotesModal onSaveSuccess={(note) => setMonthNote(note)} />
         </div>
+
+        {monthNote && (
+          <section className="flex flex-col gap-4 mt-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">
+              Notas del Mes (<span className="capitalize">{format(currentDate, "MMMM", { locale: es })}</span>)
+            </h2>
+            <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl shadow-sm border">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{monthNote}</p>
+            </div>
+          </section>
+        )}
 
         {notesList.length > 0 && (
           <section className="flex flex-col gap-4 mt-4 mb-8">
             <h2 className="text-xl font-semibold text-muted-foreground">
-              Notas del Mes
+              Notas Diarias
             </h2>
             <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl shadow-sm border flex flex-col gap-3">
               {notesList.map((record) => (
