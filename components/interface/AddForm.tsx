@@ -25,9 +25,10 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
 interface AddFormProps {
   onAddSuccess?: () => void;
+  trigger?: React.ReactElement;
 }
 
-const AddForm = ({ onAddSuccess }: AddFormProps = {}) => {
+const AddForm = ({ onAddSuccess, trigger }: AddFormProps = {}) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -157,7 +158,7 @@ const AddForm = ({ onAddSuccess }: AddFormProps = {}) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="ghost" className="w-full justify-start" />}>
+      <DialogTrigger render={trigger || <Button variant="ghost" className="w-full justify-start" />}>
         Añadir registro
       </DialogTrigger>
       <DialogContent className="w-87.5 sm:max-w-md">

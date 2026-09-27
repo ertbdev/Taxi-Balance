@@ -13,15 +13,23 @@ import { Calendar } from "@/components/ui/calendar";
 
 interface MonthNotesModalProps {
   onSaveSuccess?: (note: string) => void;
+  trigger?: React.ReactElement;
+  initialDate?: Date;
 }
 
-export default function MonthNotesModal({ onSaveSuccess }: MonthNotesModalProps) {
+export default function MonthNotesModal({ onSaveSuccess, trigger, initialDate }: MonthNotesModalProps) {
   const [open, setOpen] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(initialDate || new Date());
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+
+  useEffect(() => {
+    if (open && initialDate) {
+      setCurrentDate(initialDate);
+    }
+  }, [open, initialDate]);
 
   useEffect(() => {
     if (!open) return;
@@ -62,7 +70,7 @@ export default function MonthNotesModal({ onSaveSuccess }: MonthNotesModalProps)
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="ghost" className="w-full justify-start" />}>
+      <DialogTrigger render={trigger || <Button variant="ghost" className="w-full justify-start" />}>
         Notas del mes
       </DialogTrigger>
       <DialogContent className="sm:max-w-md flex flex-col gap-4">
