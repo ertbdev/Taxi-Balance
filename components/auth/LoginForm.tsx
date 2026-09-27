@@ -20,7 +20,7 @@ import loginSchema from "@/schemas/loginSchema";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { cAuth } from "@/firebase/config/client";
 
 const LoginForm = () => {
@@ -49,20 +49,13 @@ const LoginForm = () => {
   };
 
   const onGoogleLogin = async () => {
+    setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      // Must be called immediately without any state updates (like setLoading) before it,
-      // otherwise mobile browsers and strict mode treat it as an async popup and block it.
-      await signInWithPopup(cAuth, provider);
-      setLoading(true);
-      router.push("/");
+      await signInWithRedirect(cAuth, provider);
     } catch (e: any) {
       console.error(e);
-      if (e.code === 'auth/popup-blocked') {
-        alert("El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para iniciar sesión.");
-      } else {
-        alert("Error Google Login: " + e.message);
-      }
+      alert("Error Google Login: " + e.message);
       setLoading(false);
     }
   };

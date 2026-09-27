@@ -13,24 +13,25 @@ export default function Home() {
   useEffect(() => {
     let isMounted = true;
 
-    // Must be called to process the redirect login properly on some devices
+    // 1. Listen for auth state changes (fires immediately, sometimes with null before redirect finishes)
+    const unsubscribe = onAuthStateChanged(cAuth, (currentUser) => {
+      if (currentUser && isMounted) {
+        router.push("/");
+      }
+    });
+
+    // 2. Wait for getRedirectResult to finish before we assume the user is not logged in.
+    // This resolves after Firebase fully reads IndexedDB and processes the Google Redirect.
     getRedirectResult(cAuth)
-      .then((result) => {
-        if (result?.user && isMounted) {
-          router.push("/");
+      .then(() => {
+        if (isMounted && !cAuth.currentUser) {
+          setCheckingAuth(false);
         }
       })
       .catch((error) => {
         console.error("Error processing redirect result:", error);
-      });
-
-    const unsubscribe = onAuthStateChanged(cAuth, (currentUser) => {
-      if (currentUser) {
-        if (isMounted) router.push("/");
-      } else {
         if (isMounted) setCheckingAuth(false);
-      }
-    });
+      });
 
     return () => {
       isMounted = false;
